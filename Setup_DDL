@@ -439,35 +439,6 @@ insert into iot_tag (tagname, record_source, hk_tag, data_type, dv_hashdiff) (se
 insert into iot_tag (tagname, record_source, hk_tag, data_type, dv_hashdiff) (select 'NOISY', 'DEMO' , md5_binary('DEMO^NOISY'), 'NUMBER', md5_binary('NUMBER'));
 insert into iot_tag (tagname, record_source, hk_tag, data_type, dv_hashdiff) (select 'INCREASING', 'DEMO' , md5_binary('DEMO^INCREASING'), 'NUMBER', md5_binary('NUMBER'));
 
-update signals set id = decode(id, 'a', 'SIMPLE1', 'b', 'NOISY', 'INCREASING');
-SELECT * FROM SIGNALS;
-
-alter session set timezone = 'UTC';
-
-select 
-    md5('DEMO^'||id) hk_tag,
-    timestampadd(seconds, x, to_timestamp_tz(timestamp_from_parts(2020,1,1,0,0,0))) tstamp,
-    'DEMO' record_source, 
-    y val_number,
-    null val_text,
-    100 quality,
-    to_date(tstamp) d,
-    null unit_uid,
-    dd.day_index day_index,
-    extract(hour, tstamp) * 3600 + extract('minute', tstamp) * 60 + extract(second, tstamp) second_index,
-    0 ms_index,
-    date_part('epoch_second', tstamp) ep_seconds,
-    null edit_comment,
-    current_timestamp() load_ts
-from 
-    signals s,
-    iot_base_day dd 
-where
-    d = dd.date_value;
-
-select * from iot_tag_value;
-
-select * from signals;
 
 create or replace view iot_tag_value_dv as
 (select 
@@ -514,57 +485,43 @@ select * from iot_tag_value_dv;
 set buckets = 5;
 set sig = 'SIMPLE1';
 
-select 
-    'raw' sig_type, 
-    tstamp, 
-    val_number y 
-from 
-    iot_tag_value_dv 
-where 
-    tagname = $sig
+select 'raw' sig_type, x, y -20 y from signals where id = $sig
 union all 
-select 'lttb' sig_type, tstamp, y from 
+select 'ds' sig_type, x, y from 
 (
 with 
-vals as (
+vals as ( -- get subset of values from table that has all signals
     select 
-        tstamp,
-        ep_seconds,
-        val_number y
+        x,
+        y,
+        rank() over (order by x) idx,
     from 
-        iot_tag_value_dv
+        signals
     where 
-        tagname = $sig),
-stats as (
+        id = $sig),
+mx as ( -- one line of stats needed to do the calc
     select 
-        min(ep_seconds) start_seconds,
-        count(*) samples, 
-        round(samples / $buckets + .5) group_count 
+        max(idx) m, 
+        round(m / $buckets + .5) group_count 
     from 
-        vals)
-select * from stats;
-        ,
-group_values as (
+        vals),
+group_values as ( -- generate a grouping set based on the divider num rows / number of buckets
     select
-        v.timestamp, 
         v.x,
         v.y,
         v.idx,
-        decode($buckets, 2,g.g2,3,g.g3,4,g.g4,5,g.g5,10,g.g10,15,g.g15,20,g.g20,30,g.g30,40,g.g40,50,g.g50,100,g.g100,200,g.g200,250,g.g250,300,g300,
-        500,g.g500,600,g.g600,1000,g.g1000,1500,g.g1500,2000,g.g2000,3000,g.g3000,4000,g.g4000,5000,g.g5000,10000,g.g10000,20000,g.g20000,50000,g.g50000) group_n
+        round(v.idx / $buckets + .5, 0) group_n
     from
         vals v,
-        iot_base_viz_group g,
         mx
     where
-        v.idx = g.n
-        and v.idx > 1 and v.idx < mx.m
+        v.idx > 1 and v.idx < mx.m
     union all
-        select x, y, 1, 0 group_n from vals where idx = 1
+        select x, y, 1, 0 group_n from vals where idx = 1 -- always get the first sample in its own group
     union all
-        select vals.x, vals.y, mx.m idx, mx.group_count group_n from vals, mx where vals.idx = mx.m),
+        select vals.x, vals.y, mx.m idx, mx.group_count group_n from vals, mx where vals.idx = mx.m), -- always have the last sample in its own group
 group_averages as (
-    select
+    select -- required by algorithm for third bucket
         group_n,
         avg(x) xavg,
         avg(y) yavg
@@ -572,7 +529,7 @@ group_averages as (
         group_values
     group by 
         group_n),
-ab_group_values as (
+ab_group_values as ( -- pre calculate every possible 3 group with all possible bucket 1 values, each bucket 2 value and the average of bucket 3s
     select
         b.group_n,
         a.x x1, 
@@ -598,9 +555,9 @@ select
 from
     ab_group_values
 where
-    next_area is null
+    next_area is null -- pick the largest in each group
 union all
-select
+select -- throw in the first value
     group_n,
     xavg x,
     yavg y
