@@ -113,39 +113,6 @@ CREATE TABLE iot_base_millisecond
 )
 COMMENT = 'For millisecond level aggregations.  Note that there is one row added to this table that has null values - so it contains 1001 rows.';
 
--- ************************************** IOT_BASE_VIZ_GROUP
-CREATE TABLE IOT_BASE_VIZ_GROUP
-(
- N      number(18,0) NOT NULL,
- G2     number(10,0),
- G3     number(10,0),
- G4     number(10,0),
- G5     number(10,0),
- G10    number(10,0),
- G15    number(10,0),
- G20    number(10,0),
- G30    number(10,0),
- G40    number(10,0),
- G50    number(10,0),
- G100   number(10,0),
- G200   number(10,0),
- G250   number(10,0),
- G300   number(10,0),
- G500   number(10,0),
- G600   number(10,0),
- G1000  number(10,0),
- G1500  number(10,0),
- G2000  number(10,0),
- G3000  number(10,0),
- G4000  number(10,0),
- G5000  number(26,0),
- G10000 number(10,0),
- G20000 number(10,0),
- G50000 number(10,0),
-
- CONSTRAINT PK_1 PRIMARY KEY ( N )
-);
-
 -- ************************************** _base_day
 CREATE TABLE iot_base_day
 (
@@ -230,43 +197,6 @@ CREATE or replace TABLE iot_tag_value
  CONSTRAINT FK_70 FOREIGN KEY ( ms_index ) REFERENCES iot_base_millisecond ( ms_index ),
  CONSTRAINT FK_71 FOREIGN KEY ( day_index ) REFERENCES iot_base_day ( day_index )
 );
-
-
-select * from iot_base_viz_group;
-
-insert into iot_base_viz_group (N,G2,G3,G4,G5,G10,G15,G20,G30,G40,G50,G100,G200,G250,G300,G500,G600,G1000,G1500,G2000,G3000,G4000,G5000,G10000,G20000,G50000)
-(
-select
-    g.n, 
-    round(g.n / 2 + .5) g2,
-    round(g.n / 3 + .5) g3,
-    round(g.n / 4 + .5) g4,
-    round(g.n / 5 + .5) g5,
-    round(g.n / 10 + .5) g10,
-    round(g.n / 15 + .5) g15,
-    round(g.n / 20 + .5) g20,
-    round(g.n / 30 + .5) g30,
-    round(g.n / 40 + .5) g40,
-    round(g.n / 50 + .5) g50,
-    round(g.n / 100 + .5) g100,
-    round(g.n / 200 + .5) g200,
-    round(g.n / 250 + .5) g250,
-    round(g.n / 300 + .5) g300,
-    round(g.n / 500 + .5) g500,
-    round(g.n / 600 + .5) g600,
-    round(g.n / 1000 + .5) g1000,
-    round(g.n / 1500 + .5) g1500,
-    round(g.n / 2000 + .5) g2000,
-    round(g.n / 3000 + .5) g3000,
-    round(g.n / 4000 + .5) g4000,
-    round(g.n / 5000 + .5) g5000,
-    round(g.n / 10000 + .5) g10000,
-    round(g.n / 20000 + .5) g20000,
-    round(g.n / 50000 + .5) g50000
-from
-    (select row_number() over(order by 1) n from (select seq4() from table(generator(rowcount => 1000000)))) g
-);
-
 
 insert into IOT_base_day (select
     n day_index,
