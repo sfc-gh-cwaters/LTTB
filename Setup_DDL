@@ -1,0 +1,611 @@
+-- ************************************** iot_unit
+CREATE TABLE iot_unit
+(
+ unit_uid       integer NOT NULL,
+ unit_name      varchar NOT NULL,
+ unit_long_name varchar,
+ category       varchar,
+ dscr           varchar,
+ dimension      varchar,
+
+ CONSTRAINT PK_1 PRIMARY KEY ( unit_uid )
+);
+
+-- ************************************** iot_base_second
+CREATE TABLE iot_base_second
+(
+ second_index number(19,0) NOT NULL,
+ TM           time(9) NOT NULL,
+ S2           number(26,0),
+ S3           number(26,0),
+ S4           number(26,0),
+ S5           number(26,0),
+ S10          number(26,0),
+ S15          number(26,0),
+ S20          number(26,0),
+ S30          number(26,0),
+ M1           number(26,0),
+ M2           number(26,0),
+ M3           number(26,0),
+ M5           number(26,0),
+ M10          number(26,0),
+ M15          number(26,0),
+ M20          number(26,0),
+ M30          number(26,0),
+ H1           number(26,0),
+ H2           number(26,0),
+ H3           number(26,0),
+ H4           number(26,0),
+ H6           number(26,0),
+ H12          number(26,0),
+ S1M          number(1,0),
+ S2M          number(1,0),
+ S3M          number(1,0),
+ S4M          number(1,0),
+ S5M          number(1,0),
+ S10M         number(1,0),
+ S15M         number(1,0),
+ S20M         number(1,0),
+ S30M         number(1,0),
+ M1M          number(1,0),
+ M2M          number(1,0),
+ M3M          number(1,0),
+ M5M          number(1,0),
+ M10M         number(1,0),
+ M15M         number(1,0),
+ M20M         number(1,0),
+ M30M         number(1,0),
+ H1M          number(1,0),
+ H2M          number(1,0),
+ H3M          number(1,0),
+ H4M          number(1,0),
+ H6M          number(1,0),
+ H12M         number(1,0),
+ D1M          number(1,0),
+ hour_index   integer NOT NULL,
+ minute_index integer NOT NULL,
+
+ CONSTRAINT PK_1 PRIMARY KEY ( second_index )
+)
+COMMENT = 'The base second table holds 86400 rows and is designed to assist with standard  aggregating functions used in time series.  It essentially assists with using a simpler, set based approach to calculations involving time series values.';
+
+-- ************************************** iot_base_millisecond
+CREATE TABLE iot_base_millisecond
+(
+ ms_index number(19,0) NOT NULL,
+ MS2      number(26,0),
+ MS4      number(26,0),
+ MS5      number(26,0),
+ MS6      number(26,0),
+ MS8      number(26,0),
+ MS10     number(26,0),
+ MS15     number(26,0),
+ MS20     number(26,0),
+ MS30     number(26,0),
+ MS40     number(26,0),
+ MS50     number(26,0),
+ MS100    number(26,0),
+ MS200    number(26,0),
+ MS250    number(26,0),
+ MS300    number(26,0),
+ MS400    number(26,0),
+ MS500    number(26,0),
+ INCLUDE  number(1,0),
+ MS2M     number(1,0),
+ MS4M     number(1,0),
+ MS5M     number(1,0),
+ MS6M     number(1,0),
+ MS8M     number(1,0),
+ MS10M    number(1,0),
+ MS15M    number(1,0),
+ MS20M    number(1,0),
+ MS30M    number(1,0),
+ MS40M    number(1,0),
+ MS50M    number(1,0),
+ MS100M   number(1,0),
+ MS200M   number(1,0),
+ MS250M   number(1,0),
+ MS300M   number(1,0),
+ MS400M   number(1,0),
+ MS500M   number(1,0),
+
+ CONSTRAINT PK_1 PRIMARY KEY ( ms_index )
+)
+COMMENT = 'For millisecond level aggregations.  Note that there is one row added to this table that has null values - so it contains 1001 rows.';
+
+-- ************************************** IOT_BASE_VIZ_GROUP
+CREATE TABLE IOT_BASE_VIZ_GROUP
+(
+ N      number(18,0) NOT NULL,
+ G2     number(10,0),
+ G3     number(10,0),
+ G4     number(10,0),
+ G5     number(10,0),
+ G10    number(10,0),
+ G15    number(10,0),
+ G20    number(10,0),
+ G30    number(10,0),
+ G40    number(10,0),
+ G50    number(10,0),
+ G100   number(10,0),
+ G200   number(10,0),
+ G250   number(10,0),
+ G300   number(10,0),
+ G500   number(10,0),
+ G600   number(10,0),
+ G1000  number(10,0),
+ G1500  number(10,0),
+ G2000  number(10,0),
+ G3000  number(10,0),
+ G4000  number(10,0),
+ G5000  number(26,0),
+ G10000 number(10,0),
+ G20000 number(10,0),
+ G50000 number(10,0),
+
+ CONSTRAINT PK_1 PRIMARY KEY ( N )
+);
+
+-- ************************************** _base_day
+CREATE TABLE iot_base_day
+(
+ day_index      integer NOT NULL,
+ date_value     date NOT NULL,
+ day_name       varchar NOT NULL,
+ month_name     varchar NOT NULL,
+ eom            date NOT NULL COMMENT 'end of month',
+ year           integer NOT NULL,
+ year_month     integer NOT NULL COMMENT '1-12',
+ year_half      integer NOT NULL COMMENT '1 or 2',
+ year_quarter   integer NOT NULL COMMENT '1, 2, 3, 4',
+ year_week      integer NOT NULL,
+ year_day       integer NOT NULL,
+ days_in_month  integer NOT NULL,
+ dofw_sun_start integer NOT NULL,
+ dofw_sat_start integer NOT NULL,
+ dofw_fri_start integer NOT NULL,
+ dofw_thu_start integer NOT NULL,
+ dofw_wed_start integer NOT NULL,
+ dofw_tue_start integer NOT NULL,
+ dofw_mon_start integer NOT NULL,
+ eow_sun_start  date NOT NULL COMMENT 'end of week - ending Tuesday',
+ eow_sat_start  date NOT NULL COMMENT 'end of week - ending Wednesday',
+ eow_fri_start  date NOT NULL COMMENT 'end of week - ending Thursday',
+ eow_thu_start  date NOT NULL COMMENT 'end of week - ending Friday',
+ eow_wed_start  date NOT NULL COMMENT 'end of week - ending Saturday',
+ eow_tue_start  date NOT NULL COMMENT 'end of week - ending Sunday',
+ eow_mon_start  date NOT NULL COMMENT 'end of week - ending Monday',
+
+ CONSTRAINT PK_1 PRIMARY KEY ( day_index )
+)
+COMMENT = 'Table for ALL days';
+
+
+-- ************************************** iot_tag
+CREATE or replace TABLE iot_tag
+(
+ hk_tag        binary NOT NULL,
+ tagname       varchar NOT NULL,
+ record_source varchar NOT NULL,
+ data_type     varchar NOT NULL COMMENT 'text, number, timestamp, date',
+ dimension     varchar COMMENT 'temperature, pressure, volume, level, flow rate, voltage, etc.',
+ time_zone     varchar,
+ measure_type  varchar COMMENT 'Standard Measure - Tubing pressure, tank level, Ambient Temperature, etc.  UDC (user defined Code)',
+ dscr          varchar,
+ unit_uid      integer,
+ eng_min_val   number(38,10),
+ eng_max_val   number(38,10),
+ min_val       number(38,10),
+ max_val       number(38,10),
+ max_rate      number(38,0),
+ sdt_deadband  number(38,10),
+ load_ts       timestamp_tz NOT NULL DEFAULT current_timestamp(),
+ dv_hashdiff   binary NOT NULL,
+
+ CONSTRAINT PK_1 PRIMARY KEY ( hk_tag ),
+ CONSTRAINT FK_34 FOREIGN KEY ( unit_uid ) REFERENCES iot_unit ( unit_uid )
+);
+
+-- ************************************** iot_tag_value
+CREATE or replace TABLE iot_tag_value
+(
+ hk_tag        binary NOT NULL,
+ tstamp        timestamp_tz NOT NULL,
+ record_source varchar NOT NULL,
+ val_number    float,
+ val_text      varchar,
+ quality       integer,
+ d             date NOT NULL,
+ unit_uid      integer,
+ day_index     integer NOT NULL,
+ second_index  number(19,0) NOT NULL,
+ ms_index      number(19,0) NOT NULL,
+ ep_seconds    number(14,0) NOT NULL,
+ edit_comment  varchar,
+ load_ts       timestamp_tz NOT NULL DEFAULT current_timestamp(),
+ CONSTRAINT PK_1 PRIMARY KEY ( hk_tag, tstamp ),
+ CONSTRAINT FK_39_2 FOREIGN KEY ( unit_uid ) REFERENCES iot_unit ( unit_uid ),
+ CONSTRAINT FK_68_2 FOREIGN KEY ( second_index ) REFERENCES iot_base_second ( second_index ),
+ CONSTRAINT FK_69_1 FOREIGN KEY ( hk_tag ) REFERENCES iot_tag ( hk_tag ),
+ CONSTRAINT FK_70 FOREIGN KEY ( ms_index ) REFERENCES iot_base_millisecond ( ms_index ),
+ CONSTRAINT FK_71 FOREIGN KEY ( day_index ) REFERENCES iot_base_day ( day_index )
+);
+
+
+select * from iot_base_viz_group;
+
+insert into iot_base_viz_group (N,G2,G3,G4,G5,G10,G15,G20,G30,G40,G50,G100,G200,G250,G300,G500,G600,G1000,G1500,G2000,G3000,G4000,G5000,G10000,G20000,G50000)
+(
+select
+    g.n, 
+    round(g.n / 2 + .5) g2,
+    round(g.n / 3 + .5) g3,
+    round(g.n / 4 + .5) g4,
+    round(g.n / 5 + .5) g5,
+    round(g.n / 10 + .5) g10,
+    round(g.n / 15 + .5) g15,
+    round(g.n / 20 + .5) g20,
+    round(g.n / 30 + .5) g30,
+    round(g.n / 40 + .5) g40,
+    round(g.n / 50 + .5) g50,
+    round(g.n / 100 + .5) g100,
+    round(g.n / 200 + .5) g200,
+    round(g.n / 250 + .5) g250,
+    round(g.n / 300 + .5) g300,
+    round(g.n / 500 + .5) g500,
+    round(g.n / 600 + .5) g600,
+    round(g.n / 1000 + .5) g1000,
+    round(g.n / 1500 + .5) g1500,
+    round(g.n / 2000 + .5) g2000,
+    round(g.n / 3000 + .5) g3000,
+    round(g.n / 4000 + .5) g4000,
+    round(g.n / 5000 + .5) g5000,
+    round(g.n / 10000 + .5) g10000,
+    round(g.n / 20000 + .5) g20000,
+    round(g.n / 50000 + .5) g50000
+from
+    (select row_number() over(order by 1) n from (select seq4() from table(generator(rowcount => 1000000)))) g
+);
+
+
+insert into IOT_base_day (select
+    n day_index,
+    dateadd(day, n-1, to_date('1/1/1900', 'MM/DD/YYYY')) date_value,
+    dayname(date_value) day_name,
+    monthname(date_value) month_name,
+    last_day(date_value) eom,
+    year(date_value) year,
+    month(date_value) year_month,
+    case when year_month < 7 then 1 else 2 end year_half,
+    case when year_month < 4 then 1 when year_month between 4 and 6 then 2 when year_month between 7 and 9 then 3 else 4 end year_quarter,
+    week(date_value) year_week,
+    day(date_value) year_day,
+    dayofmonth(eom) days_in_month,
+    dayofweek(date_value) dofw_sun,
+    dayofweek(dateadd(day, 1, date_value)) dofw_sat,
+    dayofweek(dateadd(day, 2, date_value)) dofw_fri,
+    dayofweek(dateadd(day, 3, date_value)) dofw_thu,
+    dayofweek(dateadd(day, 4, date_value)) dofw_wed,
+    dayofweek(dateadd(day, 5, date_value)) dofw_tue,
+    dayofweek(dateadd(day, 6, date_value)) dofw_mon,
+    decode(dofw_sun, 0, date_value, dateadd(day, 7 - dofw_sun, date_value)) eow_sun,
+    decode(dofw_sun, 0, date_value, dateadd(day, 7 - dofw_sat, date_value)) eow_sat,
+    decode(dofw_fri, 0, date_value, dateadd(day, 7 - dofw_fri, date_value)) eow_fri,
+    decode(dofw_thu, 0, date_value, dateadd(day, 7 - dofw_thu, date_value)) eow_thu,
+    decode(dofw_fri, 0, date_value, dateadd(day, 7 - dofw_wed, date_value)) eow_wed,
+    decode(dofw_fri, 0, date_value, dateadd(day, 7 - dofw_tue, date_value)) eow_tue,
+    decode(dofw_fri, 0, date_value, dateadd(day, 7 - dofw_mon, date_value)) eow_mon
+from
+    (select row_number() over (order by seq4()) n from table(generator(rowcount => 100000))));
+ 
+ 
+insert into IOT_base_millisecond (select
+    n-1 ms_index,
+    trunc((n - 1) / 2) ms2,
+    trunc((n - 1) / 4) ms4,
+    trunc((n - 1) / 5) ms5,
+    trunc((n - 1) / 6) ms6,
+    trunc((n - 1) / 8) ms8,
+    trunc((n - 1) / 10) ms10,
+    trunc((n - 1) / 15) ms15,
+    trunc((n - 1) / 20) ms20,
+    trunc((n - 1) / 30) ms30,
+    trunc((n - 1) / 40) ms40,
+    trunc((n - 1) / 50) ms50,
+    trunc((n - 1) / 100) ms100,
+    trunc((n - 1) / 200) ms200,
+    trunc((n - 1) / 250) ms250,
+    trunc((n - 1) / 300) ms300,
+    trunc((n - 1) / 400) ms400,
+    trunc((n - 1) / 500) ms500,
+    1 include,
+    iff(ms_index = 0, 0, iff(ms2 <> trunc((n - 2) / 2), 0, 1)) ms2m,
+    iff(ms_index = 0, 0, iff(ms4 <> trunc((n - 2) / 4), 0, 1)) ms4m,
+    iff(ms_index = 0, 0, iff(ms5 <> trunc((n - 2) / 5), 0, 1)) ms5m,
+    iff(ms_index = 0, 0, iff(ms6 <> trunc((n - 2) / 6), 0, 1)) ms6m,
+    iff(ms_index = 0, 0, iff(ms8 <> trunc((n - 2) / 8), 0, 1)) ms8m,
+    iff(ms_index = 0, 0, iff(ms10 <> trunc((n - 2) / 10), 0, 1)) ms10m,
+    iff(ms_index = 0, 0, iff(ms15 <> trunc((n - 2) / 15), 0, 1)) ms15m,
+    iff(ms_index = 0, 0, iff(ms20 <> trunc((n - 2) / 20), 0, 1)) ms20m,
+    iff(ms_index = 0, 0, iff(ms30 <> trunc((n - 2) / 30), 0, 1)) ms30m,
+    iff(ms_index = 0, 0, iff(ms40 <> trunc((n - 2) / 40), 0, 1)) ms40m,
+    iff(ms_index = 0, 0, iff(ms50 <> trunc((n - 2) / 50), 0, 1)) ms50m,
+    iff(ms_index = 0, 0, iff(ms100 <> trunc((n - 2) / 100), 0, 1)) ms100m,
+    iff(ms_index = 0, 0, iff(ms200 <> trunc((n - 2) / 200), 0, 1)) ms200m,
+    iff(ms_index = 0, 0, iff(ms250 <> trunc((n - 2) / 250), 0, 1)) ms250m,
+    iff(ms_index = 0, 0, iff(ms300 <> trunc((n - 2) / 300), 0, 1)) ms300m,
+    iff(ms_index = 0, 0, iff(ms400 <> trunc((n - 2) / 400), 0, 1)) ms400m,
+    iff(ms_index = 0, 0, iff(ms500 <> trunc((n - 2) / 500), 0, 1)) ms500m
+from
+    (select row_number() over (order by seq4()) n from table(generator(rowcount => 1000)))
+union all
+    select 0 ms_index,
+    null ms2,
+    null ms4,
+    null ms5,
+    null ms6,
+    null ms8,
+    null ms10,
+    null ms15,
+    null ms22,
+    null ms30,
+    null ms40,
+    null ms50,
+    null ms100,
+    null ms200,
+    null ms250,
+    null ms300,
+    null ms400,
+    null ms500,
+    0 include,
+    null ms2m,
+    null ms4m,
+    null ms5m,
+    null ms6m,
+    null ms8m,
+    null ms10m,
+    null ms15m,
+    null ms20m,
+    null ms30m,
+    null ms40m,
+    null ms50m,
+    null ms100m,
+    null ms200m,
+    null ms250m,
+    null ms300m,
+    null ms400m,
+    null ms500m
+);
+
+insert into IOT_base_second (
+select
+    n-1 second_index,
+    to_time(to_char(n-1)) tm,
+    trunc((n - 1) / 2) s2,
+    trunc((n - 1) / 3) s3,
+    trunc((n - 1) / 4) s4,
+    trunc((n - 1) / 5) s5,
+    trunc((n - 1) / 10) s10,
+    trunc((n - 1) / 15) s15,
+    trunc((n - 1) / 20) s20,
+    trunc((n - 1) / 30) s30,
+    trunc((n - 1) / 60) m1,
+    trunc((n - 1) / (2 * 60)) m2,
+    trunc((n - 1) / (3 * 60)) m3,    
+    trunc((n - 1) / (5 * 60)) m5,
+    trunc((n - 1) / (10 * 60)) m10,
+    trunc((n - 1) / (15 * 60)) m15,
+    trunc((n - 1) / (20 * 60)) m20,
+    trunc((n - 1) / (30 * 60)) m30,
+    trunc((n - 1) / (1 * 60 * 60)) h1,
+    trunc((n - 1) / (2 * 60 * 60)) h2,
+    trunc((n - 1) / (3 * 60 * 60)) h3,
+    trunc((n - 1) / (4 * 60 * 60)) h4,
+    trunc((n - 1) / (6 * 60 * 60)) h6,
+    trunc((n - 1) / (12 * 60 * 60)) h12,
+    0 s1m,
+    iff(mod(n-1, 2) = 0, 0, 1) s2m,
+    iff(mod(n-1, 3) = 0, 0, 1) s3m,
+    iff(mod(n-1, 4) = 0, 0, 1) s4m,
+    iff(mod(n-1, 5) = 0, 0, 1) s5m,
+    iff(mod(n-1, 10) = 0, 0, 1) s10m,
+    iff(mod(n-1, 15) = 0, 0, 1) s15m,
+    iff(mod(n-1, 20) = 0, 0, 1) s20m,
+    iff(mod(n-1, 30) = 0, 0, 1) s30m,
+    iff(mod(n-1, 60) = 0, 0, 1) m1m,
+    iff(mod(n-1, 120) = 0, 0, 1) m2m,
+    iff(mod(n-1, 180) = 0, 0, 1) m3m,
+    iff(mod(n-1, 300) = 0, 0, 1) m5m,
+    iff(mod(n-1, 600) = 0, 0, 1) m10m,
+    iff(mod(n-1, 900) = 0, 0, 1) m15m,
+    iff(mod(n-1, 1200) = 0, 0, 1) m20m,
+    iff(mod(n-1, 1800) = 0, 0, 1) m30m,
+    iff(mod(n-1, 3600) = 0, 0, 1) h1m,
+    iff(mod(n-1, 7200) = 0, 0, 1) h2m,
+    iff(mod(n-1, 10800) = 0, 0, 1) h3m,
+    iff(mod(n-1, 14400) = 0, 0, 1) h4m,
+    iff(mod(n-1, 21600) = 0, 0, 1) h6m,
+    iff(mod(n-1, 43200) = 0, 0, 1) h12m,
+    iff(mod(n-1, 86400) = 0, 0, 1) d1m,
+    hour(tm) hour_index,
+    minute(tm) minute_index
+from
+    (select row_number() over (order by seq4()) n from table(generator(rowcount => 86400)))
+);
+
+
+select * from iot_tag;
+insert into iot_tag (tagname, record_source, hk_tag, data_type, dv_hashdiff) (select 'SIMPLE1', 'DEMO' , md5_binary('DEMO^SIMPLE1'), 'NUMBER', md5_binary('NUMBER'));
+insert into iot_tag (tagname, record_source, hk_tag, data_type, dv_hashdiff) (select 'NOISY', 'DEMO' , md5_binary('DEMO^NOISY'), 'NUMBER', md5_binary('NUMBER'));
+insert into iot_tag (tagname, record_source, hk_tag, data_type, dv_hashdiff) (select 'INCREASING', 'DEMO' , md5_binary('DEMO^INCREASING'), 'NUMBER', md5_binary('NUMBER'));
+
+update signals set id = decode(id, 'a', 'SIMPLE1', 'b', 'NOISY', 'INCREASING');
+SELECT * FROM SIGNALS;
+
+alter session set timezone = 'UTC';
+
+select 
+    md5('DEMO^'||id) hk_tag,
+    timestampadd(seconds, x, to_timestamp_tz(timestamp_from_parts(2020,1,1,0,0,0))) tstamp,
+    'DEMO' record_source, 
+    y val_number,
+    null val_text,
+    100 quality,
+    to_date(tstamp) d,
+    null unit_uid,
+    dd.day_index day_index,
+    extract(hour, tstamp) * 3600 + extract('minute', tstamp) * 60 + extract(second, tstamp) second_index,
+    0 ms_index,
+    date_part('epoch_second', tstamp) ep_seconds,
+    null edit_comment,
+    current_timestamp() load_ts
+from 
+    signals s,
+    iot_base_day dd 
+where
+    d = dd.date_value;
+
+select * from iot_tag_value;
+
+select * from signals;
+
+create or replace view iot_tag_value_dv as
+(select 
+    hk_tag,
+    tagname,
+    tstamp,
+    record_source,
+    val_number,
+    val_text,
+    quality,
+    d,
+    unit_name,
+    unit_uid,
+    day_index,
+    second_index,
+    ms_index,
+    ep_seconds
+from (
+    select
+        v.hk_tag,
+        t.tagname,
+        v.tstamp,
+        v.record_source,
+        v.val_number,
+        v.val_text,
+        v.quality,
+        v.d,
+        u.unit_name,
+        v.unit_uid,
+        v.day_index,
+        v.second_index,
+        v.ms_index,
+        v.ep_seconds,
+        v.edit_comment,
+        v.load_ts,
+        lead(v.load_ts) over (partition by v.hk_tag, v.tstamp order by v.load_ts) next_version
+    from
+        iot_tag_value v inner join iot_tag t on v.hk_tag = t.hk_tag
+        left join iot_unit u on t.unit_uid = u.unit_uid)
+    where next_version is null);
+
+select * from iot_tag_value_dv;
+
+set buckets = 5;
+set sig = 'SIMPLE1';
+
+select 
+    'raw' sig_type, 
+    tstamp, 
+    val_number y 
+from 
+    iot_tag_value_dv 
+where 
+    tagname = $sig
+union all 
+select 'lttb' sig_type, tstamp, y from 
+(
+with 
+vals as (
+    select 
+        tstamp,
+        ep_seconds,
+        val_number y
+    from 
+        iot_tag_value_dv
+    where 
+        tagname = $sig),
+stats as (
+    select 
+        min(ep_seconds) start_seconds,
+        count(*) samples, 
+        round(samples / $buckets + .5) group_count 
+    from 
+        vals)
+select * from stats;
+        ,
+group_values as (
+    select
+        v.timestamp, 
+        v.x,
+        v.y,
+        v.idx,
+        decode($buckets, 2,g.g2,3,g.g3,4,g.g4,5,g.g5,10,g.g10,15,g.g15,20,g.g20,30,g.g30,40,g.g40,50,g.g50,100,g.g100,200,g.g200,250,g.g250,300,g300,
+        500,g.g500,600,g.g600,1000,g.g1000,1500,g.g1500,2000,g.g2000,3000,g.g3000,4000,g.g4000,5000,g.g5000,10000,g.g10000,20000,g.g20000,50000,g.g50000) group_n
+    from
+        vals v,
+        iot_base_viz_group g,
+        mx
+    where
+        v.idx = g.n
+        and v.idx > 1 and v.idx < mx.m
+    union all
+        select x, y, 1, 0 group_n from vals where idx = 1
+    union all
+        select vals.x, vals.y, mx.m idx, mx.group_count group_n from vals, mx where vals.idx = mx.m),
+group_averages as (
+    select
+        group_n,
+        avg(x) xavg,
+        avg(y) yavg
+    from
+        group_values
+    group by 
+        group_n),
+ab_group_values as (
+    select
+        b.group_n,
+        a.x x1, 
+        a.y y1,
+        b.x x2,
+        b.y y2,
+        av.xavg x3,
+        av.yavg y3,
+        abs(x1 * y2 + x2 * y3 + x3 * y1 - x1 * y3 - x2 * y1 - x3 * y2) / 2 area,
+        lead(area) over (partition by b.group_n order by b.group_n, area) next_area
+    from
+        group_values a,
+        group_values b,
+        group_averages av
+    where
+        a.group_n = b.group_n - 1
+        and b.group_n = av.group_n
+    )
+select 
+    group_n,
+    x2 x,
+    y2 y
+from
+    ab_group_values
+where
+    next_area is null
+union all
+select
+    group_n,
+    xavg x,
+    yavg y
+from
+    group_averages
+where
+    group_n = 0)    
+order by sig_type, x;
