@@ -11,40 +11,6 @@ CREATE TABLE iot_unit
  CONSTRAINT PK_1 PRIMARY KEY ( unit_uid )
 );
 
--- ************************************** _base_day
-CREATE TABLE iot_base_day
-(
- day_index      integer NOT NULL,
- date_value     date NOT NULL,
- day_name       varchar NOT NULL,
- month_name     varchar NOT NULL,
- eom            date NOT NULL COMMENT 'end of month',
- year           integer NOT NULL,
- year_month     integer NOT NULL COMMENT '1-12',
- year_half      integer NOT NULL COMMENT '1 or 2',
- year_quarter   integer NOT NULL COMMENT '1, 2, 3, 4',
- year_week      integer NOT NULL,
- year_day       integer NOT NULL,
- days_in_month  integer NOT NULL,
- dofw_sun_start integer NOT NULL,
- dofw_sat_start integer NOT NULL,
- dofw_fri_start integer NOT NULL,
- dofw_thu_start integer NOT NULL,
- dofw_wed_start integer NOT NULL,
- dofw_tue_start integer NOT NULL,
- dofw_mon_start integer NOT NULL,
- eow_sun_start  date NOT NULL COMMENT 'end of week - ending Tuesday',
- eow_sat_start  date NOT NULL COMMENT 'end of week - ending Wednesday',
- eow_fri_start  date NOT NULL COMMENT 'end of week - ending Thursday',
- eow_thu_start  date NOT NULL COMMENT 'end of week - ending Friday',
- eow_wed_start  date NOT NULL COMMENT 'end of week - ending Saturday',
- eow_tue_start  date NOT NULL COMMENT 'end of week - ending Sunday',
- eow_mon_start  date NOT NULL COMMENT 'end of week - ending Monday',
-
- CONSTRAINT PK_1 PRIMARY KEY ( day_index )
-)
-COMMENT = 'Table for ALL days';
-
 
 -- ************************************** iot_tag
 CREATE or replace TABLE iot_tag
@@ -96,36 +62,6 @@ CREATE or replace TABLE iot_tag_value
  CONSTRAINT FK_71 FOREIGN KEY ( day_index ) REFERENCES iot_base_day ( day_index )
 );
 
-insert into IOT_base_day (select
-    n day_index,
-    dateadd(day, n-1, to_date('1/1/1900', 'MM/DD/YYYY')) date_value,
-    dayname(date_value) day_name,
-    monthname(date_value) month_name,
-    last_day(date_value) eom,
-    year(date_value) year,
-    month(date_value) year_month,
-    case when year_month < 7 then 1 else 2 end year_half,
-    case when year_month < 4 then 1 when year_month between 4 and 6 then 2 when year_month between 7 and 9 then 3 else 4 end year_quarter,
-    week(date_value) year_week,
-    day(date_value) year_day,
-    dayofmonth(eom) days_in_month,
-    dayofweek(date_value) dofw_sun,
-    dayofweek(dateadd(day, 1, date_value)) dofw_sat,
-    dayofweek(dateadd(day, 2, date_value)) dofw_fri,
-    dayofweek(dateadd(day, 3, date_value)) dofw_thu,
-    dayofweek(dateadd(day, 4, date_value)) dofw_wed,
-    dayofweek(dateadd(day, 5, date_value)) dofw_tue,
-    dayofweek(dateadd(day, 6, date_value)) dofw_mon,
-    decode(dofw_sun, 0, date_value, dateadd(day, 7 - dofw_sun, date_value)) eow_sun,
-    decode(dofw_sun, 0, date_value, dateadd(day, 7 - dofw_sat, date_value)) eow_sat,
-    decode(dofw_fri, 0, date_value, dateadd(day, 7 - dofw_fri, date_value)) eow_fri,
-    decode(dofw_thu, 0, date_value, dateadd(day, 7 - dofw_thu, date_value)) eow_thu,
-    decode(dofw_fri, 0, date_value, dateadd(day, 7 - dofw_wed, date_value)) eow_wed,
-    decode(dofw_fri, 0, date_value, dateadd(day, 7 - dofw_tue, date_value)) eow_tue,
-    decode(dofw_fri, 0, date_value, dateadd(day, 7 - dofw_mon, date_value)) eow_mon
-from
-    (select row_number() over (order by seq4()) n from table(generator(rowcount => 100000))));
- 
 insert into iot_tag (tagname, record_source, hk_tag, data_type, dv_hashdiff) (select 'SIMPLE1', 'DEMO' , md5_binary('DEMO^SIMPLE1'), 'NUMBER', md5_binary('NUMBER'));
 insert into iot_tag (tagname, record_source, hk_tag, data_type, dv_hashdiff) (select 'NOISY', 'DEMO' , md5_binary('DEMO^NOISY'), 'NUMBER', md5_binary('NUMBER'));
 insert into iot_tag (tagname, record_source, hk_tag, data_type, dv_hashdiff) (select 'INCREASING', 'DEMO' , md5_binary('DEMO^INCREASING'), 'NUMBER', md5_binary('NUMBER'));
@@ -227,7 +163,7 @@ with
             group_values
         group by
             group_n),
-    ab_group_values as ( -- pre calculate every possible 3 group with all possible bucket 1 values, each bucket 2 value and the average of bucket 3s
+    ab_group_values as ( -- pre calculate every possible 3 group with all possible bucket 1 values(a), each bucket 2 value(b) and the average of bucket 3s(av)
         select
             b.group_n,
             a.x x1,
@@ -276,7 +212,9 @@ where
     t.tagname = V_TAGNAME
     and t.record_source = V_SOURCE
 $$;
- 
+
+
+-- Sample query showing a comparison between the tag data in raw form vs the LTTB output for a given bucket size
 select 'lttb' source_type,
     tagname,
     tstamp,
