@@ -410,89 +410,126 @@ from (
         left join iot_unit u on t.unit_uid = u.unit_uid)
     where next_version is null);
 
-select * from iot_tag_value_dv;
-
-set buckets = 5;
-set sig = 'SIMPLE1';
-
-select 'raw' sig_type, x, y -20 y from signals where id = $sig
-union all 
-select 'ds' sig_type, x, y from 
-(
-with 
-vals as ( -- get subset of values from table that has all signals
-    select 
-        x,
-        y,
-        rank() over (order by x) idx,
-    from 
-        signals
-    where 
-        id = $sig),
-mx as ( -- one line of stats needed to do the calc
-    select 
-        max(idx) m, 
-        round(m / $buckets + .5) group_count 
-    from 
-        vals),
-group_values as ( -- generate a grouping set based on the divider num rows / number of buckets
-    select
-        v.x,
-        v.y,
-        v.idx,
-        round(v.idx / $buckets + .5, 0) group_n
-    from
-        vals v,
-        mx
-    where
-        v.idx > 1 and v.idx < mx.m
-    union all
-        select x, y, 1, 0 group_n from vals where idx = 1 -- always get the first sample in its own group
-    union all
-        select vals.x, vals.y, mx.m idx, mx.group_count group_n from vals, mx where vals.idx = mx.m), -- always have the last sample in its own group
-group_averages as (
-    select -- required by algorithm for third bucket
-        group_n,
-        avg(x) xavg,
-        avg(y) yavg
-    from
-        group_values
-    group by 
-        group_n),
-ab_group_values as ( -- pre calculate every possible 3 group with all possible bucket 1 values, each bucket 2 value and the average of bucket 3s
-    select
-        b.group_n,
-        a.x x1, 
-        a.y y1,
-        b.x x2,
-        b.y y2,
-        av.xavg x3,
-        av.yavg y3,
-        abs(x1 * y2 + x2 * y3 + x3 * y1 - x1 * y3 - x2 * y1 - x3 * y2) / 2 area,
-        lead(area) over (partition by b.group_n order by b.group_n, area) next_area
-    from
-        group_values a,
-        group_values b,
-        group_averages av
-    where
-        a.group_n = b.group_n - 1
-        and b.group_n = av.group_n
-    )
-select 
-    group_n,
-    x2 x,
-    y2 y
+create or replace function down_sample_lttb(
+        V_SOURCE VARCHAR,
+        V_TAGNAME VARCHAR,
+        V_STARTTIME TIMESTAMP_TZ,
+        V_ENDTIME TIMESTAMP_TZ,
+        V_BUCKET_SIZE NUMBER)
+    returns table (
+        SOURCE VARCHAR,
+        TAGNAME VARCHAR,
+        HK_TAG BINARY,
+        TSTAMP TIMESTAMP_TZ,
+        VAL_NUMBER FLOAT)
+LANGUAGE SQL
+AS $$
+with
+    vals as (
+        select
+            ep_seconds x,
+            val_number y,
+            rank() over (order by d, ep_seconds) idx,
+        from
+            iot_tag_value_dv
+        where
+            record_source = V_SOURCE
+            and tagname = V_TAGNAME
+            and d between to_date(V_STARTTIME) and to_date(V_ENDTIME)
+            and tstamp between V_STARTTIME and V_ENDTIME),
+    mx as ( -- one line of stats needed to do the calc
+        select
+            max(idx) m,
+            round(m / V_BUCKET_SIZE + .5) group_count
+        from
+            vals),
+    group_values as ( -- generate a grouping set based on the divider num rows / number of buckets
+        select
+            v.x,
+            v.y,
+            v.idx,
+            round(v.idx / V_BUCKET_SIZE + .5, 0) group_n
+        from
+            vals v,
+            mx
+        where
+            v.idx > 1 and v.idx < mx.m
+        union all
+            select x, y, 1, 0 group_n from vals where idx = 1 -- get the first sample in its own group
+        union all
+            select vals.x, vals.y, mx.m idx, mx.group_count group_n from vals, mx where vals.idx = mx.m), -- the last sample in its own group
+    group_averages as (
+        select -- required by algorithm for third bucket
+            group_n,
+            avg(x) xavg,
+            avg(y) yavg
+        from
+            group_values
+        group by
+            group_n),
+    ab_group_values as ( -- pre calculate every possible 3 group with all possible bucket 1 values, each bucket 2 value and the average of bucket 3s
+        select
+            b.group_n,
+            a.x x1,
+            a.y y1,
+            b.x x2,
+            b.y y2,
+            av.xavg x3,
+            av.yavg y3,
+            abs(x1 * y2 + x2 * y3 + x3 * y1 - x1 * y3 - x2 * y1 - x3 * y2) / 2 area,
+            lead(area) over (partition by b.group_n order by b.group_n, area) next_area
+        from
+            group_values a, -- first bucket
+            group_values b, -- second (working) bucket
+            group_averages av -- third bucket
+        where
+            a.group_n = b.group_n - 1
+            and b.group_n = av.group_n
+    ),
+    final as (
+        select -- include first value
+            ga.xavg x,
+            ga.yavg y
+        from
+            group_averages ga
+        where
+            ga.group_n = 0
+        union all
+        select
+            x2 x,
+            y2 y
+        from
+            ab_group_values
+        where
+            next_area is null -- pick the largest in each group
+        )
+select
+    V_SOURCE record_source,
+    V_TAGNAME tagname,      
+    t.hk_tag,
+    to_timestamp_tz(to_char(to_timestamp_ntz(f.x))||' +0000') tstamp,
+    f.y val_number
 from
-    ab_group_values
+    final f,
+    iot_tag t
 where
-    next_area is null -- pick the largest in each group
+    t.tagname = V_TAGNAME
+    and t.record_source = V_SOURCE
+$$;
+ 
+select 'lttb' source_type,
+    tagname,
+    tstamp,
+    val_number
+from table(down_sample_lttb('DEMO', 'SIMPLE1', to_timestamp_tz('2020-01-01 00:00:00.000 +0000'), to_timestamp_tz('2020-01-01 01:23:19.000 +0000'), 20))
 union all
-select -- throw in the first value
-    group_n,
-    xavg x,
-    yavg y
+select
+    'raw' source_type,
+    tagname,
+    tstamp,
+    val_number
 from
-    group_averages
+    iot_tag_value_dv
 where
-    group_n = 0)    
-order by sig_type, x;
+    tagname = 'SIMPLE1';
+
